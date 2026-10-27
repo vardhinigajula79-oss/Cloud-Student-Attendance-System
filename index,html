@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cloud Student Attendance System</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #eef2f7;
+            margin: 0;
+            padding: 20px
+        }
+        
+        .container {
+            max-width: 850px;
+            margin: auto;
+            background: white;
+            padding: 22px;
+            border-radius: 12px
+        }
+        
+        h1 {
+            color: #2457a7;
+            text-align: center
+        }
+        
+        input,
+        button {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc
+        }
+        
+        button {
+            background: #2457a7;
+            color: white;
+            cursor: pointer
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px
+        }
+        
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left
+        }
+        
+        th {
+            background: #2457a7;
+            color: white
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Student Attendance System</h1>
+        <input id="name" placeholder="Student name">
+        <input id="roll" placeholder="Roll number">
+        <button onclick="addStudent()">Add Student</button>
+        <h2>Attendance Register</h2>
+        <p id="summary">Total students: 0</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Roll No.</th>
+                    <th>Name</th>
+                    <th>Present</th>
+                    <th>Absent</th>
+                    <th>%</th>
+                    <th>Mark Today</th>
+                </tr>
+            </thead>
+            <tbody id="list"></tbody>
+        </table>
+        <button onclick="report()">View Report</button>
+        <p id="report"></p>
+    </div>
+    <script>
+        let students = [];
+
+        function addStudent() {
+            let name = document.getElementById('name').value.trim();
+            let roll = document.getElementById('roll').value.trim();
+            if (!name || !roll) {
+                alert('Enter name and roll number');
+                return;
+            }
+            if (students.some(s => s.roll === roll)) {
+                alert('Roll number already exists');
+                return;
+            }
+            students.push({
+                name,
+                roll,
+                present: 0,
+                absent: 0,
+                dates: []
+            });
+            document.getElementById('name').value = '';
+            document.getElementById('roll').value = '';
+            render();
+        }
+
+        function mark(i, status) {
+            let today = new Date().toISOString().slice(0, 10);
+            let s = students[i];
+            if (s.dates.includes(today)) {
+                alert('Attendance already marked today');
+                return;
+            }
+            s.dates.push(today);
+            if (status === 'P') s.present++;
+            else s.absent++;
+            render();
+        }
+
+        function render() {
+            let list = document.getElementById('list');
+            list.replaceChildren();
+            students.forEach((s, i) => {
+                let tr = document.createElement('tr');
+                let values = [s.roll, s.name, s.present, s.absent,
+                    (s.present + s.absent ? Math.round(s.present / (s.present + s.absent) * 100) : 0) + '%'
+                ];
+                values.forEach(v => {
+                    let td = document.createElement('td');
+                    td.textContent = v;
+                    tr.appendChild(td);
+                });
+                let td = document.createElement('td');
+                ['P', 'A'].forEach(status => {
+                    let b = document.createElement('button');
+                    b.textContent = status === 'P' ? 'Present' : 'Absent';
+                    b.onclick = () => mark(i, status);
+                    td.appendChild(b);
+                });
+                tr.appendChild(td);
+                list.appendChild(tr);
+            });
+            document.getElementById('summary').textContent = 'Total students: ' + students.length;
+        }
+
+        function report() {
+            document.getElementById('report').textContent = students.map(s =>
+                s.name + ': ' + (s.present + s.absent ? Math.round(s.present / (s.present + s.absent) * 100) : 0) + '% attendance'
+            ).join(' | ') || 'No students added';
+        }
+    </script>
+</body>
+
+</html>
